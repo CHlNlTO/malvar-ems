@@ -67,43 +67,67 @@
             @if ($announcements->count() > 0)
                 <div id="announcements-carousel" class="relative w-full" data-carousel="slide">
                     <!-- Carousel wrapper -->
-                    <div class="relative h-56 overflow-hidden rounded-lg md:h-80">
+                    <div class="relative h-96 overflow-hidden rounded-lg md:h-[500px]">
                         @foreach ($announcements as $index => $announcement)
                             <div class="hidden duration-700 ease-in-out"
                                 data-carousel-item="{{ $index === 0 ? 'active' : '' }}">
                                 <div
                                     class="absolute block w-full h-full p-6 -translate-x-1/2 -translate-y-1/2 rounded-lg shadow-md top-1/2 left-1/2 bg-green-50">
-                                    <h3 class="mb-2 text-2xl font-bold text-green-800">{{ $announcement->title }}</h3>
-                                    <p class="mb-4">{{ $announcement->description }}</p>
+                                    <div class="flex flex-col h-full md:flex-row md:items-center md:gap-6">
+                                        @if ($announcement->url)
+                                            <div class="mb-4 md:w-1/2 md:mb-0">
+                                                <div
+                                                    class="relative h-60 md:h-80 overflow-hidden rounded-lg shadow-lg transition-transform hover:scale-[1.02] duration-300">
+                                                    <img src="{{ $announcement->url }}" alt="{{ $announcement->title }}"
+                                                        class="absolute object-cover object-center w-full h-full">
+                                                    <div
+                                                        class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-60">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endif
 
-                                    @if ($announcement->url)
-                                        <a href="{{ $announcement->url }}" target="_blank"
-                                            class="inline-flex items-center px-4 py-2 text-white bg-green-700 rounded-md hover:bg-green-800">
-                                            Learn More
-                                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-                                            </svg>
-                                        </a>
-                                    @endif
+                                        <div class="{{ $announcement->url ? 'md:w-1/2' : 'w-full' }}">
+                                            <h3 class="mb-3 text-2xl font-bold text-green-800">
+                                                {{ $announcement->title }}</h3>
+                                            <p class="mb-6 text-gray-700">{{ $announcement->description }}</p>
 
-                                    @if ($announcement->file)
-                                        <a href="{{ asset('storage/' . $announcement->file) }}" target="_blank"
-                                            class="inline-flex items-center px-4 py-2 ml-2 text-white bg-green-700 rounded-md hover:bg-green-800">
-                                            Download
-                                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                                </path>
-                                            </svg>
-                                        </a>
-                                    @endif
+                                            <div class="flex flex-wrap gap-3">
+                                                @if ($announcement->url)
+                                                    <a href="{{ $announcement->url }}" target="_blank"
+                                                        class="inline-flex items-center px-4 py-2 text-white transition duration-200 bg-green-700 rounded-md hover:bg-green-800">
+                                                        View Full Image
+                                                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
+                                                            </path>
+                                                        </svg>
+                                                    </a>
+                                                @endif
 
-                                    <p class="mt-4 text-sm text-gray-500">Valid from
-                                        {{ $announcement->start_date->format('M d, Y') }} to
-                                        {{ $announcement->end_date->format('M d, Y') }}</p>
+                                                @if ($announcement->file)
+                                                    <a href="{{ asset('storage/' . $announcement->file) }}"
+                                                        target="_blank"
+                                                        class="inline-flex items-center px-4 py-2 text-white transition duration-200 bg-green-700 rounded-md hover:bg-green-800">
+                                                        Download
+                                                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                                            </path>
+                                                        </svg>
+                                                    </a>
+                                                @endif
+                                            </div>
+
+                                            <p class="mt-4 text-sm text-gray-500">Valid from
+                                                {{ $announcement->start_date->format('M d, Y') }} to
+                                                {{ $announcement->end_date->format('M d, Y') }}</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         @endforeach

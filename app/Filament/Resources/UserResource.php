@@ -39,14 +39,9 @@ class UserResource extends Resource
                     ->dehydrated(fn($state) => filled($state))
                     ->required(fn(string $context): bool => $context === 'create'),
                 Forms\Components\Select::make('role')
-                    ->required()
-                    ->options([
-                        'admin' => 'Admin',
-                        'official' => 'Barangay Official',
-                        'resident' => 'Resident',
-                        'collector' => 'Waste Collector',
-                        'company' => 'Company Representative',
-                    ]),
+                    ->relationship('roles', 'name')
+                    ->preload()
+                    ->searchable(),
                 Forms\Components\Select::make('barangay_id')
                     ->label('Barangay')
                     ->options(Barangay::all()->pluck('name', 'barangay_id'))
@@ -59,7 +54,7 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('user_id')
+                Tables\Columns\TextColumn::make('id')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),

@@ -45,22 +45,8 @@ class WasteCollectionRecordResource extends Resource
                 Forms\Components\TextInput::make('biodegradable_volume')
                     ->label('Biodegradable Waste (kg)')
                     ->numeric()
-                    ->required(),
-                Forms\Components\TextInput::make('non_biodegradable_volume')
-                    ->label('Non-Biodegradable Waste (kg)')
-                    ->numeric()
-                    ->required(),
-                Forms\Components\TextInput::make('hazardous_volume')
-                    ->label('Hazardous Waste (kg)')
-                    ->numeric()
-                    ->required(),
-                Forms\Components\TextInput::make('total_volume')
-                    ->label('Total Volume (kg)')
-                    ->numeric()
                     ->required()
-                    ->disabled()
-                    ->dehydrated()
-                    ->reactive()
+                    ->live() // Make it live to react to changes
                     ->afterStateUpdated(function (callable $set, callable $get) {
                         $set(
                             'total_volume',
@@ -69,25 +55,48 @@ class WasteCollectionRecordResource extends Resource
                                 (float) $get('hazardous_volume')
                         );
                     }),
+                Forms\Components\TextInput::make('non_biodegradable_volume')
+                    ->label('Non-Biodegradable Waste (kg)')
+                    ->numeric()
+                    ->required()
+                    ->live() // Make it live to react to changes
+                    ->afterStateUpdated(function (callable $set, callable $get) {
+                        $set(
+                            'total_volume',
+                            (float) $get('biodegradable_volume') +
+                                (float) $get('non_biodegradable_volume') +
+                                (float) $get('hazardous_volume')
+                        );
+                    }),
+                Forms\Components\TextInput::make('hazardous_volume')
+                    ->label('Hazardous Waste (kg)')
+                    ->numeric()
+                    ->required()
+                    ->live() // Make it live to react to changes
+                    ->afterStateUpdated(function (callable $set, callable $get) {
+                        $set(
+                            'total_volume',
+                            (float) $get('biodegradable_volume') +
+                                (float) $get('non_biodegradable_volume') +
+                                (float) $get('hazardous_volume')
+                        );
+                    }),
+                Forms\Components\TextInput::make('total_volume')
+                    ->label('Total Volume (kg)')
+                    ->numeric()
+                    ->required()
+                    ->disabled()
+                    ->dehydrated(),
                 Forms\Components\Select::make('collector_id')
                     ->label('Collector')
                     ->options(
                         User::where('role', 'collector')
                             ->get()
-                            ->pluck('name', 'user_id')
+                            ->pluck('name', 'id')
                     )
                     ->searchable()
                     ->required(),
-            ])
-            ->reactive();
-        // ->afterStateUpdated(function (callable $set, callable $get) {
-        //     $set(
-        //         'total_volume',
-        //         (float) $get('biodegradable_volume') +
-        //             (float) $get('non_biodegradable_volume') +
-        //             (float) $get('hazardous_volume')
-        //     );
-        // });
+            ]);
     }
 
     public static function table(Table $table): Table

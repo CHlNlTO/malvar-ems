@@ -8,63 +8,90 @@ use App\Models\WasteCollectionRecord;
 use App\Models\GarbageCollectionSchedule;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class WasteStatsOverview extends BaseWidget
 {
+    use InteractsWithPageFilters;
+
     protected static ?string $pollingInterval = null;
+
+    protected int|string|array $columnSpan = 'full';
 
     protected function getStats(): array
     {
-        // Total waste collected this month
-        $totalWasteThisMonth = WasteCollectionRecord::whereHas('schedule', function ($query) {
-            $query->whereMonth('collection_date', Carbon::now()->month)
-                ->whereYear('collection_date', Carbon::now()->year);
-        })->sum('total_volume');
+        $startDate = $this->filters['startDate'] ?? Carbon::now()->subMonths(3);
+        $endDate = $this->filters['endDate'] ?? Carbon::now();
+        $barangayId = $this->filters['barangay_id'] ?? null;
 
-        // Total waste collected previous month
-        $totalWastePrevMonth = WasteCollectionRecord::whereHas('schedule', function ($query) {
-            $query->whereMonth('collection_date', Carbon::now()->subMonth()->month)
-                ->whereYear('collection_date', Carbon::now()->subMonth()->year);
-        })->sum('total_volume');
+        // Get collection data for the selected period
+        $totalWaste = WasteCollectionRecord::join('garbage_collection_schedules', 'waste_collection_records.schedule_id', '=', 'garbage_collection_schedules.schedule_id')
+            ->when($barangayId, function ($query, $barangayId) {
+                return $query->where('garbage_collection_schedules.barangay_id', $barangayId);
+            })
+            ->whereBetween('garbage_collection_schedules.collection_date', [$startDate, $endDate])
+            ->sum('total_volume');
 
-        // Calculate percentage change
-        $percentageChange = $totalWastePrevMonth > 0
-            ? round((($totalWasteThisMonth - $totalWastePrevMonth) / $totalWastePrevMonth) * 100, 2)
+        // Get distribution by waste type
+        $wasteByType = WasteCollectionRecord::join('garbage_collection_schedules', 'waste_collection_records.schedule_id', '=', 'garbage_collection_schedules.schedule_id')
+            ->when($barangayId, function ($query, $barangayId) {
+                return $query->where('garbage_collection_schedules.barangay_id', $barangayId);
+            })
+            ->whereBetween('garbage_collection_schedules.collection_date', [$startDate, $endDate])
+            ->select(
+                DB::raw('SUM(biodegradable_volume) as biodegradable'),
+                DB::raw('SUM(non_biodegradable_volume) as non_biodegradable'),
+                DB::raw('SUM(hazardous_volume) as hazardous')
+            )
+            ->first();
+
+        // Get collection efficiency
+        $collectionData = GarbageCollectionSchedule::when($barangayId, function ($query, $barangayId) {
+            return $query->where('barangay_id', $barangayId);
+        })
+            ->whereBetween('collection_date', [$startDate, $endDate])
+            ->select(
+                DB::raw('COUNT(*) as total_scheduled'),
+                DB::raw('SUM(CASE WHEN status = "completed" THEN 1 ELSE 0 END) as completed'),
+                DB::raw('SUM(CASE WHEN status = "missed" THEN 1 ELSE 0 END) as missed')
+            )
+            ->first();
+
+        // Fix division by zero for collection efficiency
+        $totalScheduled = $collectionData->total_scheduled ?? 0;
+        $collectionEfficiency = $totalScheduled > 0
+            ? round(($collectionData->completed / $totalScheduled) * 100, 1)
             : 0;
 
-        // Scheduled collections this week
-        $scheduledCollections = GarbageCollectionSchedule::whereBetween('collection_date', [
-            Carbon::now()->startOfWeek(),
-            Carbon::now()->endOfWeek(),
-        ])->count();
+        // Calculate average daily collection
+        $startCarbon = Carbon::parse($startDate);
+        $endCarbon = Carbon::parse($endDate);
+        $daysDifference = $startCarbon->diffInDays($endCarbon) + 1; // Include both start and end dates
+        $avgDailyCollection = $daysDifference > 0 ? round($totalWaste / $daysDifference, 2) : 0;
 
-        // Completed collections this week
-        $completedCollections = GarbageCollectionSchedule::where('status', 'completed')
-            ->whereBetween('collection_date', [
-                Carbon::now()->startOfWeek(),
-                Carbon::now()->endOfWeek(),
-            ])->count();
+        // Safety check for waste composition percentages to avoid division by zero
+        $biodegradablePercent = $totalWaste > 0 ? round(($wasteByType->biodegradable / $totalWaste) * 100, 1) : 0;
+        $nonBiodegradablePercent = $totalWaste > 0 ? round(($wasteByType->non_biodegradable / $totalWaste) * 100, 1) : 0;
+        $hazardousPercent = $totalWaste > 0 ? round(($wasteByType->hazardous / $totalWaste) * 100, 1) : 0;
 
         return [
-            Stat::make('Total Waste This Month', number_format($totalWasteThisMonth, 2) . ' kg')
-                ->description($percentageChange >= 0
-                    ? $percentageChange . '% increase from last month'
-                    : abs($percentageChange) . '% decrease from last month')
-                ->descriptionIcon($percentageChange >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
-                ->color($percentageChange >= 0 ? 'danger' : 'success'),
+            Stat::make('Total Waste Collected', number_format($totalWaste, 2) . ' kg')
+                ->description('From ' . $startCarbon->format('M d, Y') . ' to ' . $endCarbon->format('M d, Y'))
+                ->color('primary'),
 
-            Stat::make('Scheduled Collections This Week', $scheduledCollections)
-                ->description($scheduledCollections > 0
-                    ? 'Across all barangays'
-                    : 'No collections scheduled')
-                ->color('warning'),
-
-            Stat::make('Completed Collections This Week', $completedCollections)
-                ->description($scheduledCollections > 0
-                    ? round(($completedCollections / $scheduledCollections) * 100) . '% completion rate'
-                    : 'No collections scheduled')
+            Stat::make('Average Daily Collection', number_format($avgDailyCollection, 2) . ' kg')
+                ->description($daysDifference . ' days in selected period')
                 ->color('success'),
+
+            Stat::make('Collection Efficiency', $collectionEfficiency . '%')
+                ->description(($collectionData->completed ?? 0) . ' completed, ' . ($collectionData->missed ?? 0) . ' missed')
+                ->color($collectionEfficiency >= 80 ? 'success' : ($collectionEfficiency >= 60 ? 'warning' : 'danger')),
+
+            Stat::make('Waste Composition', 'Biodegradable: ' . $biodegradablePercent . '%')
+                ->description('Non-biodegradable: ' . $nonBiodegradablePercent . '%, Hazardous: ' . $hazardousPercent . '%')
+                ->color('info'),
         ];
     }
 }

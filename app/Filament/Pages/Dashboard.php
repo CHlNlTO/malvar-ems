@@ -31,15 +31,17 @@ class Dashboard extends BaseDashboard
             Action::make('exportWasteReport')
                 ->label('Export Waste Report')
                 ->icon('heroicon-o-arrow-down-on-square')
-                ->action(function (array $data): void {
+                ->action(function (array $data) {
                     $startDate = isset($data['start_date']) ? Carbon::parse($data['start_date']) : Carbon::now()->subMonth();
                     $endDate = isset($data['end_date']) ? Carbon::parse($data['end_date']) : Carbon::now();
                     $barangayId = $data['barangay_id'] ?? null;
 
-                    Excel::download(
-                        new WasteCollectionReportExport($startDate, $endDate, $barangayId),
-                        'waste-collection-report-' . now()->format('Y-m-d') . '.xlsx'
-                    );
+                    return response()->streamDownload(function () use ($startDate, $endDate, $barangayId) {
+                        echo Excel::raw(
+                            new WasteCollectionReportExport($startDate, $endDate, $barangayId),
+                            \Maatwebsite\Excel\Excel::XLSX
+                        );
+                    }, 'waste-collection-report-' . now()->format('Y-m-d') . '.xlsx');
                 })
                 ->form([
                     \Filament\Forms\Components\DatePicker::make('start_date')

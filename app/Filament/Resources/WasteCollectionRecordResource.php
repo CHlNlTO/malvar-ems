@@ -79,15 +79,15 @@ class WasteCollectionRecordResource extends Resource
                     ->searchable()
                     ->required(),
             ])
-            ->reactive()
-            ->afterStateUpdated(function (callable $set, callable $get) {
-                $set(
-                    'total_volume',
-                    (float) $get('biodegradable_volume') +
-                        (float) $get('non_biodegradable_volume') +
-                        (float) $get('hazardous_volume')
-                );
-            });
+            ->reactive();
+        // ->afterStateUpdated(function (callable $set, callable $get) {
+        //     $set(
+        //         'total_volume',
+        //         (float) $get('biodegradable_volume') +
+        //             (float) $get('non_biodegradable_volume') +
+        //             (float) $get('hazardous_volume')
+        //     );
+        // });
     }
 
     public static function table(Table $table): Table

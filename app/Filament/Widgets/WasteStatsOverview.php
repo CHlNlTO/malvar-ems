@@ -30,7 +30,7 @@ class WasteStatsOverview extends BaseWidget
 
         // Calculate percentage change
         $percentageChange = $totalWastePrevMonth > 0
-            ? (($totalWasteThisMonth - $totalWastePrevMonth) / $totalWastePrevMonth) * 100
+            ? round((($totalWasteThisMonth - $totalWastePrevMonth) / $totalWastePrevMonth) * 100, 2)
             : 0;
 
         // Scheduled collections this week

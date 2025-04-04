@@ -186,7 +186,7 @@
                             Filters</button>
                     </div>
 
-                    <div>
+                    <div class="flex items-start">
                         <a href="{{ route('home') }}"
                             class="text-green-700 bg-transparent hover:bg-green-100 border border-green-700 font-medium rounded-lg text-sm px-5 py-2.5">Reset</a>
                     </div>

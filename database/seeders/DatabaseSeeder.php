@@ -20,6 +20,9 @@ class DatabaseSeeder extends Seeder
             GarbageCollectionScheduleSeeder::class,
             WasteCollectionRecordSeeder::class,
             EnvironmentalClearanceSeeder::class,
+            AnnouncementSeeder::class,
+            DocumentSeeder::class,
+            OfficialSeeder::class,
         ]);
     }
 }

@@ -52,6 +52,7 @@ class UpcomingCollectionSchedules extends BaseWidget
                     ->label('Mark Completed')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
+                    ->visible(fn() => auth()->user()->hasAnyRole(['admin', 'barangay_official', 'waste_collector']))
                     ->url(
                         fn(GarbageCollectionSchedule $record): string =>
                         route('filament.admin.resources.garbage-collection-schedules.edit', ['record' => $record])

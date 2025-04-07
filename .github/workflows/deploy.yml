@@ -75,6 +75,7 @@ jobs:
           script: |
             cd /var/www/html/malvar-ems
             bash scripts/deployment/fix-upload-permissions.sh
+            php artisan storage:link
 
       # Clear all caches first (including Filament)
       - name: Clear all caches

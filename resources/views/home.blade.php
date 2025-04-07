@@ -873,7 +873,7 @@
                                     d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
                                 </path>
                             </svg>
-                            info@malvar.gov.ph
+                            inquiries@malvar.gov.ph
                         </p>
                     </address>
                 </div>
@@ -881,8 +881,7 @@
 
             <div class="pt-8 mt-8 text-sm text-center border-t border-green-800">
                 <p class="text-green-100">&copy; 2025 Municipality of Malvar, Batangas. Environmental Management
-                    System. All
-                    rights reserved.</p>
+                    System. All rights reserved.</p>
             </div>
         </div>
     </footer>

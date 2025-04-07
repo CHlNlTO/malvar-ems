@@ -27,11 +27,16 @@ jobs:
         with:
           node-version: "18"
 
-      - name: Install NPM Dependencies
-        run: npm ci
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
 
-      - name: Build NPM Assets
-        run: npm run build
+      - name: Install PNPM Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build PNPM Assets
+        run: pnpm run build
 
       # Setup known_hosts file
       - name: Setup known_hosts
@@ -46,7 +51,7 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > deploy_key
           chmod 600 deploy_key
           # Using -rlgoDz instead of -avz to skip timestamp preservation (-t)
-          rsync -rlgoDz --delete -e "ssh -i deploy_key" ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html/malvar-ems/ --exclude=".git" --exclude="node_modules" --exclude="vendor" --exclude=".env"
+          rsync -rlgoDz --delete -e "ssh -i deploy_key" ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html/malvar-ems/ --exclude=".git" --exclude="node_modules" --exclude=".pnpm" --exclude="vendor" --exclude=".env"
           rm deploy_key
 
       # Clear all caches first (including Filament)

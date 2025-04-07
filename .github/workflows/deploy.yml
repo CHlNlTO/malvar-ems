@@ -46,15 +46,15 @@ jobs:
           chmod 600 ~/.ssh/known_hosts
 
       # Run permission prep script before deployment
-      - name: Prepare server for deployment
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /var/www/html/malvar-ems
-            bash scripts/deployment/prepare-for-deploy.sh
+      # - name: Prepare server for deployment
+      #   uses: appleboy/ssh-action@master
+      #   with:
+      #     host: ${{ secrets.SERVER_HOST }}
+      #     username: ${{ secrets.SERVER_USER }}
+      #     key: ${{ secrets.SSH_PRIVATE_KEY }}
+      #     script: |
+      #       cd /var/www/html/malvar-ems
+      #       bash scripts/deployment/prepare-for-deploy.sh
 
       # Deploy with rsync - MODIFIED OPTIONS
       - name: Deploy with rsync
@@ -66,15 +66,15 @@ jobs:
           rm deploy_key
 
       # Fix permissions after deployment
-      - name: Fix permissions for uploads
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /var/www/html/malvar-ems
-            bash scripts/deployment/fix-upload-permissions.sh
+      # - name: Fix permissions for uploads
+      #   uses: appleboy/ssh-action@master
+      #   with:
+      #     host: ${{ secrets.SERVER_HOST }}
+      #     username: ${{ secrets.SERVER_USER }}
+      #     key: ${{ secrets.SSH_PRIVATE_KEY }}
+      #     script: |
+      #       cd /var/www/html/malvar-ems
+      #       bash scripts/deployment/fix-upload-permissions.sh
 
       # Clear all caches first (including Filament)
       - name: Clear all caches

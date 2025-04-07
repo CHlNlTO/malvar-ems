@@ -513,8 +513,7 @@
 
             <!-- Download Full Report Button -->
             <div class="mt-10 text-center">
-                <a href="{{ url('/admin/export-waste-report?' . http_build_query(request()->query())) }}"
-                    target="_blank"
+                <a href="{{ route('admin.export-waste-report', request()->query()) }}" target="_blank"
                     class="inline-flex items-center px-6 py-3 font-semibold text-white transition-all rounded-lg shadow-md bg-gradient-to-r from-green-700 to-green-600 hover:shadow-lg hover:from-green-800 hover:to-green-700">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg">

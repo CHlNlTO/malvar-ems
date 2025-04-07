@@ -879,7 +879,7 @@
             </div>
 
             <div class="pt-8 mt-8 text-sm text-center border-t border-green-800">
-                <p class="text-green-100">&copy; 2025 Municipality of Malvar, Batangas. Environmental Management
+                <p class="text-green-100">&copy; 2025 Municipality of Malvar. Environmental Management
                     System. All rights reserved.</p>
             </div>
         </div>

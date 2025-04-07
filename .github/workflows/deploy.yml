@@ -45,6 +45,17 @@ jobs:
           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
 
+      # Run permission prep script before deployment
+      - name: Prepare server for deployment
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/html/malvar-ems
+            bash scripts/deployment/prepare-for-deploy.sh
+
       # Deploy with rsync - MODIFIED OPTIONS
       - name: Deploy with rsync
         run: |
@@ -53,6 +64,17 @@ jobs:
           # Using -rlgoDz instead of -avz to skip timestamp preservation (-t)
           rsync -rlgoDz --delete -e "ssh -i deploy_key" ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html/malvar-ems/ --exclude=".git" --exclude="node_modules" --exclude=".pnpm" --exclude="vendor" --exclude=".env"
           rm deploy_key
+
+      # Fix permissions after deployment
+      - name: Fix permissions for uploads
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/html/malvar-ems
+            bash scripts/deployment/fix-upload-permissions.sh
 
       # Clear all caches first (including Filament)
       - name: Clear all caches

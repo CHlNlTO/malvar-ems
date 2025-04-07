@@ -101,12 +101,13 @@ class EnvironmentalClearanceResource extends Resource
                     }),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()->visible(fn() => auth()->user()->hasAnyRole(['admin', 'barangay_official'])),
+                Tables\Actions\DeleteAction::make()->visible(fn() => auth()->user()->hasAnyRole(['admin', 'barangay_official'])),
                 Tables\Actions\Action::make('approve')
                     ->label('Approve')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
+                    ->visible(fn() => auth()->user()->hasAnyRole(['admin', 'barangay_official']))
                     ->action(function (EnvironmentalClearance $record): void {
                         $record->status = 'approved';
                         $record->save();
@@ -116,6 +117,7 @@ class EnvironmentalClearanceResource extends Resource
                     ->label('Reject')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
+                    ->visible(fn() => auth()->user()->hasAnyRole(['admin', 'barangay_official']))
                     ->action(function (EnvironmentalClearance $record, array $data): void {
                         $record->status = 'rejected';
                         if (isset($data['remarks'])) {
@@ -132,10 +134,11 @@ class EnvironmentalClearanceResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()->visible(fn() => auth()->user()->hasAnyRole(['admin', 'barangay_official'])),
                     Tables\Actions\BulkAction::make('approve')
                         ->label('Approve Selected')
                         ->icon('heroicon-o-check-circle')
+                        ->visible(fn() => auth()->user()->hasAnyRole(['admin', 'barangay_official']))
                         ->action(function ($records): void {
                             $records->each(function ($record): void {
                                 $record->status = 'approved';

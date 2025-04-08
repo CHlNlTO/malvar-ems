@@ -13,7 +13,13 @@ class ListEnvironmentalClearances extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\Action::make('downloadCertificate')
+                ->label('Download Request Certificate')
+                ->color('info')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->url(asset('files/malvar_clearance_request_certificate.pdf'))
+                ->openUrlInNewTab(),
+            Actions\CreateAction::make()->label('New Request'),
         ];
     }
 }

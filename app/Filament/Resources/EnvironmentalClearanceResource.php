@@ -1,7 +1,5 @@
 <?php
 
-// app/Filament/Resources/EnvironmentalClearanceResource.php
-
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\EnvironmentalClearanceResource\Pages;
@@ -12,6 +10,8 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class EnvironmentalClearanceResource extends Resource
 {
@@ -25,13 +25,33 @@ class EnvironmentalClearanceResource extends Resource
 
     public static function form(Form $form): Form
     {
+        $user = Auth::user();
+        $isCompanyRep = $user?->hasRole('company');
+
         return $form
             ->schema([
                 Forms\Components\Select::make('company_id')
                     ->label('Company')
-                    ->options(Company::all()->pluck('name', 'company_id'))
+                    ->options(function () use ($user, $isCompanyRep) {
+                        if ($isCompanyRep) {
+                            // Only show user's company
+                            return Company::where('company_id', $user->company_id)
+                                ->pluck('name', 'company_id');
+                        }
+                        // Show all companies for other roles
+                        return Company::pluck('name', 'company_id');
+                    })
                     ->searchable()
-                    ->required(),
+                    ->required()
+                    ->disabled($isCompanyRep) // Disable for company reps
+                    ->dehydrated(true) // Still include in submitted data even if disabled
+                    ->default(function () use ($user, $isCompanyRep) {
+                        // Default to user's company if they're a company rep
+                        if ($isCompanyRep && $user->company_id) {
+                            return $user->company_id;
+                        }
+                        return null;
+                    }),
                 Forms\Components\DatePicker::make('submission_date')
                     ->default(now())
                     ->required(),
@@ -42,7 +62,15 @@ class EnvironmentalClearanceResource extends Resource
                         'rejected' => 'Rejected',
                     ])
                     ->default('pending')
+                    ->disabled($isCompanyRep) // Disable status field for company reps
+                    ->dehydrated(true) // Ensure it's still included in form submission
                     ->required(),
+                Forms\Components\FileUpload::make('document')
+                    ->label('Supporting Document (PDF)')
+                    ->directory('clearance-documents')
+                    ->acceptedFileTypes(['application/pdf'])
+                    ->maxSize(5120) // 5MB in kilobytes
+                    ->helperText('Upload PDF file (max 5MB)'),
                 Forms\Components\Textarea::make('remarks')
                     ->maxLength(65535)
                     ->columnSpanFull(),
@@ -68,10 +96,18 @@ class EnvironmentalClearanceResource extends Resource
                         'pending' => 'warning',
                         'rejected' => 'danger',
                     }),
+                Tables\Columns\TextColumn::make('document')
+                    ->label('Document')
+                    ->formatStateUsing(fn($state) => $state ? 'Uploaded' : 'Not Uploaded')
+                    ->badge()
+                    ->color(fn($state) => $state ? 'success' : 'danger'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('remarks')
+                    ->searchable()
+                    ->sortable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('company_id')
@@ -101,23 +137,29 @@ class EnvironmentalClearanceResource extends Resource
                     }),
             ])
             ->actions([
-                Tables\Actions\EditAction::make()->visible(fn() => auth()->user()->hasAnyRole(['admin', 'barangay_official'])),
-                Tables\Actions\DeleteAction::make()->visible(fn() => auth()->user()->hasAnyRole(['admin', 'barangay_official'])),
+                Tables\Actions\EditAction::make()->visible(fn() => auth()->user()->hasAnyRole(['super_admin', 'admin', 'barangay_official'])),
+                Tables\Actions\DeleteAction::make()->visible(fn() => auth()->user()->hasAnyRole(['super_admin', 'admin', 'barangay_official'])),
                 Tables\Actions\Action::make('approve')
                     ->label('Approve')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
-                    ->visible(fn() => auth()->user()->hasAnyRole(['admin', 'barangay_official']))
+                    ->visible(function (EnvironmentalClearance $record) {
+                        return auth()->user()->hasAnyRole(['super_admin', 'admin', 'barangay_official'])
+                            && $record->status === 'pending';
+                    })
                     ->action(function (EnvironmentalClearance $record): void {
                         $record->status = 'approved';
                         $record->save();
-                    })
-                    ->visible(fn(EnvironmentalClearance $record): bool => $record->status === 'pending'),
+                    }),
+
                 Tables\Actions\Action::make('reject')
                     ->label('Reject')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
-                    ->visible(fn() => auth()->user()->hasAnyRole(['admin', 'barangay_official']))
+                    ->visible(function (EnvironmentalClearance $record) {
+                        return auth()->user()->hasAnyRole(['super_admin', 'admin', 'barangay_official'])
+                            && $record->status === 'pending';
+                    })
                     ->action(function (EnvironmentalClearance $record, array $data): void {
                         $record->status = 'rejected';
                         if (isset($data['remarks'])) {
@@ -129,22 +171,11 @@ class EnvironmentalClearanceResource extends Resource
                         Forms\Components\Textarea::make('remarks')
                             ->label('Reason for Rejection')
                             ->required(),
-                    ])
-                    ->visible(fn(EnvironmentalClearance $record): bool => $record->status === 'pending'),
+                    ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()->visible(fn() => auth()->user()->hasAnyRole(['admin', 'barangay_official'])),
-                    Tables\Actions\BulkAction::make('approve')
-                        ->label('Approve Selected')
-                        ->icon('heroicon-o-check-circle')
-                        ->visible(fn() => auth()->user()->hasAnyRole(['admin', 'barangay_official']))
-                        ->action(function ($records): void {
-                            $records->each(function ($record): void {
-                                $record->status = 'approved';
-                                $record->save();
-                            });
-                        }),
+                    Tables\Actions\DeleteBulkAction::make()->visible(fn() => auth()->user()->hasAnyRole(['super_admin', 'admin', 'barangay_official'])),
                 ]),
             ]);
     }
@@ -155,6 +186,24 @@ class EnvironmentalClearanceResource extends Resource
             //
         ];
     }
+
+    // Add role-based query scoping
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        // Check if user has admin/official roles that should see all records
+        $hasFullAccess = $user?->hasAnyRole(['super_admin', 'admin', 'barangay_official']);
+
+        // If user does NOT have full access roles, restrict to their company's records
+        if (!$hasFullAccess && $user && $user->company_id) {
+            $query->where('company_id', $user->company_id);
+        }
+
+        return $query;
+    }
+
 
     public static function getPages(): array
     {

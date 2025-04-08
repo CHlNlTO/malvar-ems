@@ -19,6 +19,7 @@ class EnvironmentalClearance extends Model
         'submission_date',
         'status',
         'remarks',
+        'document',
     ];
 
     protected $casts = [

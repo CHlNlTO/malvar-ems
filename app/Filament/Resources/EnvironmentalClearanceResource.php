@@ -137,6 +137,7 @@ class EnvironmentalClearanceResource extends Resource
                     }),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make()->visible(fn() => auth()->user()->hasAnyRole(['super_admin', 'admin', 'barangay_official'])),
                 Tables\Actions\DeleteAction::make()->visible(fn() => auth()->user()->hasAnyRole(['super_admin', 'admin', 'barangay_official'])),
                 Tables\Actions\Action::make('approve')
@@ -210,6 +211,7 @@ class EnvironmentalClearanceResource extends Resource
         return [
             'index' => Pages\ListEnvironmentalClearances::route('/'),
             'create' => Pages\CreateEnvironmentalClearance::route('/create'),
+            'view' => Pages\ViewEnvironmentalClearance::route('/{record}'),
             'edit' => Pages\EditEnvironmentalClearance::route('/{record}/edit'),
         ];
     }

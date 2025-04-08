@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -437,6 +438,8 @@
                 </div>
             </div>
 
+
+
             <!-- Waste Collection by Barangay -->
             <div class="p-6 mb-8 bg-white border border-gray-100 shadow-md rounded-xl">
                 <h3 class="mb-4 text-xl font-bold text-green-800">Waste Collection by Barangay</h3>
@@ -528,6 +531,43 @@
     </section>
 
     <div class="section-transition green-to-white"></div>
+
+    <!-- Charts Section -->
+    <section id="waste-charts" class="py-16 bg-gradient-to-b from-green-50 to-white">
+        <div class="container px-4 mx-auto">
+            <div class="max-w-3xl mx-auto mb-12 text-center">
+                <h2 class="mb-3 text-3xl font-bold text-green-800">Waste Analytics</h2>
+                <p class="text-gray-600">Visual insights into our waste management performance</p>
+            </div>
+
+            <!-- Waste Collection Line Chart -->
+            <div class="p-6 mb-8 bg-white border border-gray-100 shadow-md rounded-xl">
+                <h3 class="mb-6 text-xl font-bold text-green-800">Waste Collection Trends</h3>
+                <div class="h-80">
+                    <canvas id="wasteCollectionLineChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Two charts side by side -->
+            <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
+                <!-- Waste By Type Bar Chart -->
+                <div class="p-6 bg-white border border-gray-100 shadow-md rounded-xl">
+                    <h3 class="mb-6 text-xl font-bold text-green-800">Waste Collection by Type</h3>
+                    <div class="h-64">
+                        <canvas id="wasteByTypeChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Barangay Comparison Chart -->
+                <div class="p-6 bg-white border border-gray-100 shadow-md rounded-xl">
+                    <h3 class="mb-6 text-xl font-bold text-green-800">Top Barangays by Waste Volume</h3>
+                    <div class="h-64">
+                        <canvas id="wasteByBarangayChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Documents Section -->
     <section id="documents" class="py-16 bg-gradient-to-b from-green-50 to-white">
@@ -1023,6 +1063,232 @@
                         this.style.transform = 'translateY(0)';
                         this.style.boxShadow = '';
                     });
+                });
+            }
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Common chart options
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.color = '#4b5563';
+            Chart.defaults.plugins.tooltip.titleColor = '#065f46';
+            Chart.defaults.plugins.tooltip.bodyColor = '#111827';
+            Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+            Chart.defaults.plugins.tooltip.borderColor = '#d1d5db';
+            Chart.defaults.plugins.tooltip.borderWidth = 1;
+            Chart.defaults.plugins.tooltip.padding = 10;
+            Chart.defaults.plugins.tooltip.cornerRadius = 6;
+            Chart.defaults.plugins.legend.labels.boxWidth = 12;
+            Chart.defaults.plugins.legend.labels.padding = 15;
+
+            // 1. Waste Collection Line Chart
+            const lineChartData = @json($wasteCollectionLineData ?? []);
+            if (document.getElementById('wasteCollectionLineChart')) {
+                new Chart(document.getElementById('wasteCollectionLineChart'), {
+                    type: 'line',
+                    data: {
+                        labels: lineChartData.labels ?? [],
+                        datasets: [{
+                            label: 'Total Waste (kg)',
+                            data: lineChartData.data ?? [],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.3,
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Waste Volume (kg)',
+                                    font: {
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    precision: 0
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Date',
+                                    font: {
+                                        weight: 'bold'
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + parseFloat(context.raw)
+                                            .toFixed(2) + ' kg';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 2. Waste By Type Bar Chart
+            const wasteTypeData = @json($wasteByTypeChartData ?? []);
+            if (document.getElementById('wasteByTypeChart')) {
+                new Chart(document.getElementById('wasteByTypeChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: wasteTypeData.labels ?? [],
+                        datasets: [{
+                                label: 'Biodegradable',
+                                data: wasteTypeData.biodegradable ?? [],
+                                backgroundColor: '#10b981', // Green
+                                borderColor: '#10b981',
+                                borderWidth: 1,
+                            },
+                            {
+                                label: 'Non-Biodegradable',
+                                data: wasteTypeData.non_biodegradable ?? [],
+                                backgroundColor: '#f59e0b', // Amber
+                                borderColor: '#f59e0b',
+                                borderWidth: 1,
+                            },
+                            {
+                                label: 'Hazardous',
+                                data: wasteTypeData.hazardous ?? [],
+                                backgroundColor: '#ef4444', // Red
+                                borderColor: '#ef4444',
+                                borderWidth: 1,
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                stacked: false,
+                                title: {
+                                    display: true,
+                                    text: 'Waste Volume (kg)',
+                                    font: {
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    precision: 0
+                                }
+                            },
+                            x: {
+                                stacked: false,
+                                title: {
+                                    display: true,
+                                    text: 'Period',
+                                    font: {
+                                        weight: 'bold'
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + parseFloat(context.raw)
+                                            .toFixed(2) + ' kg';
+                                    }
+                                }
+                            },
+                            legend: {
+                                position: 'top',
+                                align: 'center'
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 3. Waste By Barangay Chart
+            const wasteByBarangayData = @json($wasteByBarangayChartData ?? []);
+            if (document.getElementById('wasteByBarangayChart')) {
+                new Chart(document.getElementById('wasteByBarangayChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: wasteByBarangayData.labels ?? [],
+                        datasets: [{
+                                label: 'Biodegradable',
+                                data: wasteByBarangayData.biodegradable ?? [],
+                                backgroundColor: '#10b981',
+                                borderColor: '#10b981',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Non-Biodegradable',
+                                data: wasteByBarangayData.non_biodegradable ?? [],
+                                backgroundColor: '#f59e0b',
+                                borderColor: '#f59e0b',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Hazardous',
+                                data: wasteByBarangayData.hazardous ?? [],
+                                backgroundColor: '#ef4444',
+                                borderColor: '#ef4444',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Waste Volume (kg)',
+                                    font: {
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    precision: 0
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Barangay',
+                                    font: {
+                                        weight: 'bold'
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + parseFloat(context.raw)
+                                            .toFixed(2) + ' kg';
+                                    }
+                                }
+                            },
+                            legend: {
+                                position: 'top',
+                                align: 'center'
+                            }
+                        }
+                    }
                 });
             }
         });

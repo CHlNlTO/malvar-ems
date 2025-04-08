@@ -104,6 +104,11 @@ class HomeController extends Controller
             ->limit(5)
             ->get();
 
+        // Prepare data for charts
+        $wasteCollectionLineData = $this->prepareWasteCollectionLineData($startDate, $endDate, $selectedBarangayId);
+        $wasteByTypeChartData = $this->prepareWasteByTypeChartData($startDate, $endDate, $selectedBarangayId);
+        $wasteByBarangayChartData = $this->prepareWasteByBarangayChartData();
+
         return view('home', compact(
             'announcements',
             'barangays',
@@ -116,7 +121,92 @@ class HomeController extends Controller
             'upcomingSchedules',
             'startDate',
             'endDate',
-            'selectedBarangayId'
+            'selectedBarangayId',
+            'wasteCollectionLineData',
+            'wasteByTypeChartData',
+            'wasteByBarangayChartData'
         ));
+    }
+
+    private function prepareWasteCollectionLineData($startDate, $endDate, $barangayId = null)
+    {
+        $records = WasteCollectionRecord::join('garbage_collection_schedules', 'waste_collection_records.schedule_id', '=', 'garbage_collection_schedules.schedule_id')
+            ->when($barangayId, function ($query, $barangayId) {
+                return $query->where('garbage_collection_schedules.barangay_id', $barangayId);
+            })
+            ->whereBetween('garbage_collection_schedules.collection_date', [$startDate, $endDate])
+            ->select(
+                DB::raw('DATE_FORMAT(garbage_collection_schedules.collection_date, "%Y-%m-%d") as collection_date'),
+                DB::raw('SUM(total_volume) as total_volume')
+            )
+            ->groupBy('collection_date')
+            ->orderBy('collection_date')
+            ->get();
+
+        return [
+            'labels' => $records->pluck('collection_date')->map(function ($date) {
+                return Carbon::createFromFormat('Y-m-d', $date)->format('M d, Y');
+            })->toArray(),
+            'data' => $records->pluck('total_volume')->toArray(),
+        ];
+    }
+
+    /**
+     * Prepare data for Waste By Type Bar Chart
+     */
+    private function prepareWasteByTypeChartData($startDate, $endDate, $barangayId = null)
+    {
+        $records = WasteCollectionRecord::join('garbage_collection_schedules', 'waste_collection_records.schedule_id', '=', 'garbage_collection_schedules.schedule_id')
+            ->when($barangayId, function ($query, $barangayId) {
+                return $query->where('garbage_collection_schedules.barangay_id', $barangayId);
+            })
+            ->whereBetween('garbage_collection_schedules.collection_date', [$startDate, $endDate])
+            ->select(
+                DB::raw('DATE_FORMAT(garbage_collection_schedules.collection_date, "%Y-%m") as month'),
+                DB::raw('SUM(biodegradable_volume) as biodegradable'),
+                DB::raw('SUM(non_biodegradable_volume) as non_biodegradable'),
+                DB::raw('SUM(hazardous_volume) as hazardous')
+            )
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
+
+        return [
+            'labels' => $records->pluck('month')->map(function ($month) {
+                return Carbon::createFromFormat('Y-m', $month)->format('M Y');
+            })->toArray(),
+            'biodegradable' => $records->pluck('biodegradable')->toArray(),
+            'non_biodegradable' => $records->pluck('non_biodegradable')->toArray(),
+            'hazardous' => $records->pluck('hazardous')->toArray(),
+        ];
+    }
+
+    /**
+     * Prepare data for Waste By Barangay Chart
+     */
+    private function prepareWasteByBarangayChartData()
+    {
+        $currentMonth = Carbon::now()->format('Y-m');
+
+        $records = WasteCollectionRecord::join('garbage_collection_schedules', 'waste_collection_records.schedule_id', '=', 'garbage_collection_schedules.schedule_id')
+            ->join('barangays', 'garbage_collection_schedules.barangay_id', '=', 'barangays.barangay_id')
+            ->whereRaw('DATE_FORMAT(garbage_collection_schedules.collection_date, "%Y-%m") = ?', [$currentMonth])
+            ->select(
+                'barangays.name',
+                DB::raw('SUM(biodegradable_volume) as biodegradable'),
+                DB::raw('SUM(non_biodegradable_volume) as non_biodegradable'),
+                DB::raw('SUM(hazardous_volume) as hazardous')
+            )
+            ->groupBy('barangays.name')
+            ->orderBy(DB::raw('SUM(total_volume)'), 'desc')
+            ->limit(5)
+            ->get();
+
+        return [
+            'labels' => $records->pluck('name')->toArray(),
+            'biodegradable' => $records->pluck('biodegradable')->toArray(),
+            'non_biodegradable' => $records->pluck('non_biodegradable')->toArray(),
+            'hazardous' => $records->pluck('hazardous')->toArray(),
+        ];
     }
 }

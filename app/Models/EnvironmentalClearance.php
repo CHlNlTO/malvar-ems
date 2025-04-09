@@ -18,6 +18,8 @@ class EnvironmentalClearance extends Model
         'company_id',
         'submission_date',
         'status',
+        'project',
+        'site',
         'remarks',
         'document',
     ];

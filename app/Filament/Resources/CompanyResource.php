@@ -41,6 +41,8 @@ class CompanyResource extends Resource
                     ->tel()
                     ->required()
                     ->maxLength(20),
+                Forms\Components\TextInput::make('address')
+                    ->maxLength(255),
             ]);
     }
 
@@ -60,11 +62,10 @@ class CompanyResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('phone')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
+                Tables\Columns\TextColumn::make('address')
+                    ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
+                Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\EnvironmentalClearanceResource\Pages;
 use App\Models\EnvironmentalClearance;
 use App\Models\Company;
+use App\Services\PDFCertificateService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -12,6 +13,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response;
 
 class EnvironmentalClearanceResource extends Resource
 {
@@ -52,6 +54,14 @@ class EnvironmentalClearanceResource extends Resource
                         }
                         return null;
                     }),
+                Forms\Components\TextInput::make('project')
+                    ->label('Project/Activity Title')
+                    ->required()
+                    ->maxLength(255),
+                Forms\Components\TextInput::make('site')
+                    ->label('Site Location/Address')
+                    ->required()
+                    ->maxLength(255),
                 Forms\Components\DatePicker::make('submission_date')
                     ->default(now())
                     ->required(),
@@ -86,6 +96,12 @@ class EnvironmentalClearanceResource extends Resource
                 Tables\Columns\TextColumn::make('company.name')
                     ->searchable()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('project')
+                    ->searchable()
+                    ->limit(30),
+                Tables\Columns\TextColumn::make('site')
+                    ->searchable()
+                    ->limit(30),
                 Tables\Columns\TextColumn::make('submission_date')
                     ->date()
                     ->sortable(),
@@ -105,9 +121,6 @@ class EnvironmentalClearanceResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('remarks')
-                    ->searchable()
-                    ->sortable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('company_id')
@@ -152,7 +165,6 @@ class EnvironmentalClearanceResource extends Resource
                         $record->status = 'approved';
                         $record->save();
                     }),
-
                 Tables\Actions\Action::make('reject')
                     ->label('Reject')
                     ->icon('heroicon-o-x-circle')
@@ -173,6 +185,13 @@ class EnvironmentalClearanceResource extends Resource
                             ->label('Reason for Rejection')
                             ->required(),
                     ]),
+                Tables\Actions\Action::make('download_certificate')
+                    ->label('Download Certificate')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('primary')
+                    ->visible(fn(EnvironmentalClearance $record) => $record->status === 'approved')
+                    ->url(fn(EnvironmentalClearance $record) => route('admin.download-certificate', $record))
+                    ->openUrlInNewTab(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -204,7 +223,6 @@ class EnvironmentalClearanceResource extends Resource
 
         return $query;
     }
-
 
     public static function getPages(): array
     {

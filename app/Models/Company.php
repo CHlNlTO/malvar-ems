@@ -20,6 +20,7 @@ class Company extends Model
         'contact_person',
         'email',
         'phone',
+        'address',
     ];
 
     public function environmentalClearances(): HasMany

@@ -20,13 +20,13 @@ class BarangaySeeder extends Seeder
             ['name' => 'Poblacion', 'population' => 8200, 'area' => 5.1],
             ['name' => 'San Andres', 'population' => 5600, 'area' => 3.9],
             ['name' => 'San Fernando', 'population' => 6200, 'area' => 4.3],
+            ['name' => 'San Gregorio', 'population' => 5400, 'area' => 3.7],
             ['name' => 'San Isidro', 'population' => 4900, 'area' => 3.2],
             ['name' => 'San Juan', 'population' => 5300, 'area' => 3.6],
             ['name' => 'San Pedro I', 'population' => 4700, 'area' => 3.0],
             ['name' => 'San Pedro II', 'population' => 5100, 'area' => 3.4],
+            ['name' => 'San Pioquinto', 'population' => 4500, 'area' => 2.9],
             ['name' => 'Santiago', 'population' => 5800, 'area' => 4.0],
-            ['name' => 'Santol', 'population' => 4500, 'area' => 2.9],
-            ['name' => 'Tubigan', 'population' => 5400, 'area' => 3.7],
         ];
 
         foreach ($barangays as $barangay) {

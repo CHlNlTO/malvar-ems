@@ -659,7 +659,12 @@
                     <div class="overflow-hidden bg-white border border-gray-100 shadow-md rounded-xl card"
                         data-name="{{ $barangay->name }}" data-population="{{ $barangay->population }}">
                         <div class="p-6">
-                            <h3 class="mb-2 text-xl font-bold text-green-800">{{ $barangay->name }}</h3>
+                            <h3 class="mb-2 text-xl font-bold text-green-800">
+                                <a href="{{ route('barangays.show', Str::slug($barangay->name)) }}"
+                                    class="transition-colors hover:text-green-600">
+                                    {{ $barangay->name }}
+                                </a>
+                            </h3>
                             <div class="space-y-3">
                                 <div class="flex items-center justify-between">
                                     <span class="text-gray-600">Population:</span>
@@ -696,6 +701,18 @@
                                         class="text-xs font-medium text-green-800">{{ number_format($wasteVolume, 2) }}
                                         kg</span>
                                 </div>
+                            </div>
+
+                            <div class="mt-4 text-center">
+                                <a href="{{ route('barangays.show', Str::slug($barangay->name)) }}"
+                                    class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white transition-all bg-green-600 rounded-lg hover:bg-green-700">
+                                    <span class="mr-2">View Details</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                </a>
                             </div>
                         </div>
                     </div>

@@ -219,6 +219,8 @@ class EnvironmentalClearanceResource extends Resource
         // If user does NOT have full access roles, restrict to their company's records
         if (!$hasFullAccess && $user && $user->company_id) {
             $query->where('company_id', $user->company_id);
+        } else if (!$hasFullAccess && $user && !$user->company_id) {
+            return $query->where('company_id', null);
         }
 
         return $query;

@@ -13,7 +13,22 @@ class ListEnvironmentalClearances extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make()->label('New Request'),
+            Actions\CreateAction::make()->label('New Request')->visible(function () {
+                $user = auth()->user();
+
+                // Allow admins and officials to always see the button
+                if ($user->hasAnyRole(['super_admin', 'admin', 'barangay_official'])) {
+                    return true;
+                }
+
+                // For company users, only show if they have a company_id
+                if ($user->hasRole('company')) {
+                    return $user->company_id !== null;
+                }
+
+                // Hide for all other users
+                return false;
+            }),
         ];
     }
 }

@@ -164,7 +164,8 @@
                             <option selected disabled>Switch to another barangay</option>
                             @foreach ($barangays as $b)
                                 @if ($b->barangay_id != $barangay->barangay_id)
-                                    <option value="{{ route('barangays.show', $b->slug) }}">{{ $b->name }}</option>
+                                    <option class="text-black" value="{{ route('barangays.show', $b->slug) }}">
+                                        {{ $b->name }}</option>
                                 @endif
                             @endforeach
                         </select>

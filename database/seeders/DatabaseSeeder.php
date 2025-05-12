@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             AnnouncementSeeder::class,
             DocumentSeeder::class,
             OfficialSeeder::class,
+            RemainingOfficialsSeeder::class,
         ]);
     }
 }

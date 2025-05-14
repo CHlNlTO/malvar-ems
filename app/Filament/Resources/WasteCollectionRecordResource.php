@@ -89,11 +89,10 @@ class WasteCollectionRecordResource extends Resource
                     ->dehydrated(),
                 Forms\Components\Select::make('collector_id')
                     ->label('Collector')
-                    ->options(
-                        User::where('role', 'collector')
-                            ->get()
-                            ->pluck('name', 'id')
-                    )
+                    ->options(function () {
+                        // This uses Spatie Permission's role() scope to find users with the collector role
+                        return User::role('waste_collector')->pluck('name', 'id');
+                    })
                     ->searchable()
                     ->required(),
             ]);

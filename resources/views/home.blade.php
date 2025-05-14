@@ -97,7 +97,7 @@
                     <div class="flex md:hidden">
                         <a href="{{ url('/admin') }}"
                             class="px-3 py-1.5 text-sm font-medium bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all shadow-sm backdrop-blur-sm">
-                            Admin
+                            Login
                         </a>
                     </div>
 
@@ -137,7 +137,7 @@
                         <a href="#officials" class="py-2 transition-colors hover:text-green-200">Officials</a>
                     </div>
                     <a href="{{ url('/admin') }}"
-                        class="hidden px-4 py-2 mt-4 font-medium transition-all bg-white rounded-lg shadow-sm bg-opacity-20 hover:bg-opacity-30 md:inline-block md:mt-0 md:ml-6 backdrop-blur-sm">Admin</a>
+                        class="hidden px-4 py-2 mt-4 font-medium transition-all bg-white rounded-lg shadow-sm bg-opacity-20 hover:bg-opacity-30 md:inline-block md:mt-0 md:ml-6 backdrop-blur-sm">Login</a>
                 </nav>
             </div>
         </div>

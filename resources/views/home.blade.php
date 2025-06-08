@@ -484,6 +484,110 @@
                 </div>
             </div>
 
+            <!-- Waste Collection by MRF -->
+            <div class="p-6 mb-8 bg-white border border-gray-100 shadow-md rounded-xl">
+                <h3 class="mb-4 text-xl font-bold text-green-800">Waste Collection by Material Recycling Facility</h3>
+                @if ($wasteByMRF->count() > 0)
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-700">
+                            <thead class="text-xs text-gray-700 uppercase rounded-t-lg bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 rounded-tl-lg">MRF Name</th>
+                                    <th scope="col" class="px-6 py-3">Total Waste (kg)</th>
+                                    <th scope="col" class="px-6 py-3">Daily Capacity (kg)</th>
+                                    <th scope="col" class="px-6 py-3">Avg Daily Usage</th>
+                                    <th scope="col" class="px-6 py-3 rounded-tr-lg">Avg Utilization</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($wasteByMRF as $mrfWaste)
+                                    <tr class="transition-colors bg-white border-b hover:bg-gray-50">
+                                        <td class="px-6 py-4 font-medium">{{ $mrfWaste->name }}</td>
+                                        <td class="px-6 py-4">{{ number_format($mrfWaste->total_volume, 2) }}</td>
+                                        <td class="px-6 py-4">{{ number_format($mrfWaste->capacity, 2) }}</td>
+                                        <td class="px-6 py-4">
+                                            @php
+                                                // Calculate average daily usage correctly
+                                                $startCarbon = \Carbon\Carbon::parse($startDate);
+                                                $endCarbon = \Carbon\Carbon::parse($endDate);
+                                                $daysDifference = $startCarbon->diffInDays($endCarbon) + 1;
+                                                $avgDailyWaste =
+                                                    $daysDifference > 0 ? $mrfWaste->total_volume / $daysDifference : 0;
+                                            @endphp
+                                            {{ number_format($avgDailyWaste, 2) }} kg
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center">
+                                                @php
+                                                    // Calculate CORRECT utilization: (Average Daily Usage / Daily Capacity) * 100
+                                                    $utilization =
+                                                        $mrfWaste->capacity > 0
+                                                            ? ($avgDailyWaste / $mrfWaste->capacity) * 100
+                                                            : 0;
+                                                    // Cap at 100% for display purposes
+                                                    $displayUtilization = min($utilization, 100);
+                                                @endphp
+                                                <div
+                                                    class="w-full bg-gray-200 rounded-full h-2.5 mr-2 overflow-hidden">
+                                                    <div class="h-2.5 rounded-full progress-bar {{ $utilization > 80 ? 'bg-red-600' : ($utilization > 60 ? 'bg-yellow-600' : 'bg-green-600') }}"
+                                                        style="width: {{ $displayUtilization }}%"></div>
+                                                </div>
+                                                <span
+                                                    class="text-sm font-medium {{ $utilization > 80 ? 'text-red-600' : ($utilization > 60 ? 'text-yellow-600' : 'text-green-600') }}">
+                                                    {{ number_format($utilization, 1) }}%
+                                                </span>
+                                                @if ($utilization > 100)
+                                                    <span class="ml-2 text-xs font-medium text-red-600">(Over
+                                                        Capacity)</span>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Add explanation -->
+                    <div class="p-4 mt-4 border border-blue-200 rounded-lg bg-blue-50">
+                        <h4 class="mb-2 text-sm font-medium text-blue-800">Understanding MRF Utilization</h4>
+                        <ul class="space-y-1 text-xs text-blue-700">
+                            <li>• <strong>Total Waste:</strong> Total amount processed during selected period</li>
+                            <li>• <strong>Daily Capacity:</strong> Maximum waste the facility can process per day</li>
+                            <li>• <strong>Avg Daily Usage:</strong> Average waste processed per day during the period
+                            </li>
+                            <li>• <strong>Avg Utilization:</strong> (Avg Daily Usage ÷ Daily Capacity) × 100</li>
+                        </ul>
+                        <div class="flex items-center mt-2 space-x-4 text-xs">
+                            <span class="flex items-center">
+                                <div class="w-3 h-3 mr-1 bg-green-600 rounded"></div>Good (≤60%)
+                            </span>
+                            <span class="flex items-center">
+                                <div class="w-3 h-3 mr-1 bg-yellow-600 rounded"></div>Moderate (61-80%)
+                            </span>
+                            <span class="flex items-center">
+                                <div class="w-3 h-3 mr-1 bg-red-600 rounded"></div>High (>80%)
+                            </span>
+                        </div>
+                    </div>
+                @else
+                    <div class="py-8 text-center">
+                        <div class="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full">
+                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
+                                </path>
+                            </svg>
+                        </div>
+                        <p class="text-gray-600">No waste has been assigned to Material Recycling Facilities for the
+                            selected period.</p>
+                        <p class="mt-2 text-sm text-gray-500">MRF assignments help track facility utilization and
+                            processing efficiency.</p>
+                    </div>
+                @endif
+            </div>
+
             <!-- Upcoming Collection Schedules -->
             <div class="p-6 bg-white border border-gray-100 shadow-md rounded-xl">
                 <h3 class="mb-4 text-xl font-bold text-green-800">Upcoming Collection Schedules</h3>

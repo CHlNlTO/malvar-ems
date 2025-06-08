@@ -7,6 +7,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\WasteCollectionRecordResource\Pages;
 use App\Models\WasteCollectionRecord;
 use App\Models\GarbageCollectionSchedule;
+use App\Models\MaterialRecyclingFacility;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -95,6 +96,19 @@ class WasteCollectionRecordResource extends Resource
                     })
                     ->searchable()
                     ->required(),
+                Forms\Components\Select::make('mrf_id')
+                    ->label('Material Recycling Facility')
+                    ->options(function () {
+                        return MaterialRecyclingFacility::with('barangay')
+                            ->where('status', 'active')
+                            ->get()
+                            ->mapWithKeys(function ($mrf) {
+                                return [$mrf->mrf_id => "{$mrf->name} ({$mrf->barangay->name})"];
+                            });
+                    })
+                    ->searchable()
+                    ->nullable()
+                    ->helperText('Select the MRF where waste will be processed'),
             ]);
     }
 
@@ -135,6 +149,10 @@ class WasteCollectionRecordResource extends Resource
                 Tables\Columns\TextColumn::make('collector.name')
                     ->label('Collector')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('materialRecyclingFacility.name')
+                    ->label('MRF')
+                    ->searchable()
+                    ->placeholder('Not assigned'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -171,6 +189,9 @@ class WasteCollectionRecordResource extends Resource
                 Tables\Filters\SelectFilter::make('collector_id')
                     ->relationship('collector', 'name')
                     ->label('Collector'),
+                Tables\Filters\SelectFilter::make('mrf_id')
+                    ->relationship('materialRecyclingFacility', 'name')
+                    ->label('MRF'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

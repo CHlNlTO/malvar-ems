@@ -95,6 +95,24 @@ class HomeController extends Controller
             ->orderBy('total_volume', 'desc')
             ->get();
 
+        // Waste collection by MRF
+        $wasteByMRF = WasteCollectionRecord::join('garbage_collection_schedules', 'waste_collection_records.schedule_id', '=', 'garbage_collection_schedules.schedule_id')
+            ->join('material_recycling_facilities', 'waste_collection_records.mrf_id', '=', 'material_recycling_facilities.mrf_id')
+            ->whereBetween('garbage_collection_schedules.collection_date', [$startDate, $endDate])
+            ->whereNotNull('waste_collection_records.mrf_id')
+            ->when($selectedBarangayId, function ($query, $selectedBarangayId) {
+                return $query->where('garbage_collection_schedules.barangay_id', $selectedBarangayId);
+            })
+            ->groupBy('material_recycling_facilities.mrf_id', 'material_recycling_facilities.name', 'material_recycling_facilities.capacity')
+            ->select(
+                'material_recycling_facilities.mrf_id',
+                'material_recycling_facilities.name',
+                'material_recycling_facilities.capacity',
+                DB::raw('SUM(total_volume) as total_volume')
+            )
+            ->orderBy('total_volume', 'desc')
+            ->get();
+
         // Upcoming collection schedules
         $upcomingSchedules = GarbageCollectionSchedule::with('barangay')
             ->where('collection_date', '>=', now())
@@ -118,6 +136,7 @@ class HomeController extends Controller
             'collectionEfficiency',
             'wasteByType',
             'wasteByBarangay',
+            'wasteByMRF',
             'upcomingSchedules',
             'startDate',
             'endDate',

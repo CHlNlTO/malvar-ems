@@ -36,6 +36,11 @@ class Barangay extends Model
         return $this->hasMany(Official::class, 'barangay_id', 'barangay_id');
     }
 
+    public function materialRecyclingFacilities(): HasMany
+    {
+        return $this->hasMany(MaterialRecyclingFacility::class, 'barangay_id', 'barangay_id');
+    }
+
     public function getSlugAttribute(): string
     {
         return Str::slug($this->name);

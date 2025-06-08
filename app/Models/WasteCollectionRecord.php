@@ -21,6 +21,7 @@ class WasteCollectionRecord extends Model
         'hazardous_volume',
         'total_volume',
         'collector_id',
+        'mrf_id',
     ];
 
     public function schedule(): BelongsTo
@@ -31,5 +32,10 @@ class WasteCollectionRecord extends Model
     public function collector(): BelongsTo
     {
         return $this->belongsTo(User::class, 'collector_id');
+    }
+
+    public function materialRecyclingFacility(): BelongsTo
+    {
+        return $this->belongsTo(MaterialRecyclingFacility::class, 'mrf_id', 'mrf_id');
     }
 }

@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             DocumentSeeder::class,
             OfficialSeeder::class,
             RemainingOfficialsSeeder::class,
+            MaterialRecyclingFacilitySeeder::class,
         ]);
     }
 }

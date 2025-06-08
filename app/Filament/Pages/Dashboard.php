@@ -21,6 +21,7 @@ use App\Filament\Widgets\WasteStatsOverview;
 use App\Filament\Widgets\WasteCollectionLineChart;
 use App\Filament\Widgets\WasteByTypeBarChart;
 use App\Filament\Widgets\BarangayComparisonChart;
+use App\Filament\Widgets\WasteByMRFChart;
 use Maatwebsite\Excel\Facades\Excel;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
@@ -89,6 +90,7 @@ class Dashboard extends BaseDashboard
             WasteCollectionLineChart::class,
             WasteByTypeBarChart::class,
             BarangayComparisonChart::class,
+            WasteByMRFChart::class,
             UpcomingCollectionSchedules::class,
         ];
     }

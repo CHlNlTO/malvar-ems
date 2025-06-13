@@ -485,6 +485,7 @@
             </div>
 
             <!-- Waste Collection by MRF -->
+            <!-- Waste Collection by MRF -->
             <div class="p-6 mb-8 bg-white border border-gray-100 shadow-md rounded-xl">
                 <h3 class="mb-4 text-xl font-bold text-green-800">Waste Collection by Material Recycling Facility</h3>
                 @if ($wasteByMRF->count() > 0)
@@ -494,6 +495,7 @@
                                 <tr>
                                     <th scope="col" class="px-6 py-3 rounded-tl-lg">MRF Name</th>
                                     <th scope="col" class="px-6 py-3">Total Waste (kg)</th>
+                                    <th scope="col" class="px-6 py-3">Waste Breakdown</th>
                                     <th scope="col" class="px-6 py-3">Daily Capacity (kg)</th>
                                     <th scope="col" class="px-6 py-3">Avg Daily Usage</th>
                                     <th scope="col" class="px-6 py-3 rounded-tr-lg">Avg Utilization</th>
@@ -504,6 +506,71 @@
                                     <tr class="transition-colors bg-white border-b hover:bg-gray-50">
                                         <td class="px-6 py-4 font-medium">{{ $mrfWaste->name }}</td>
                                         <td class="px-6 py-4">{{ number_format($mrfWaste->total_volume, 2) }}</td>
+                                        <td class="px-6 py-4">
+                                            @php
+                                                $biodegradable = $mrfWaste->biodegradable ?? 0;
+                                                $nonBiodegradable = $mrfWaste->non_biodegradable ?? 0;
+                                                $hazardous = $mrfWaste->hazardous ?? 0;
+                                                $total = $biodegradable + $nonBiodegradable + $hazardous;
+
+                                                $bioPercent = $total > 0 ? ($biodegradable / $total) * 100 : 0;
+                                                $nonBioPercent = $total > 0 ? ($nonBiodegradable / $total) * 100 : 0;
+                                                $hazardPercent = $total > 0 ? ($hazardous / $total) * 100 : 0;
+                                            @endphp
+
+                                            <!-- Waste composition visual bar -->
+                                            <div class="mb-2">
+                                                <div class="flex w-full h-4 overflow-hidden bg-gray-200 rounded-full">
+                                                    @if ($bioPercent > 0)
+                                                        <div class="h-4 bg-green-500"
+                                                            style="width: {{ $bioPercent }}%"
+                                                            title="Biodegradable: {{ number_format($biodegradable, 1) }}kg">
+                                                        </div>
+                                                    @endif
+                                                    @if ($nonBioPercent > 0)
+                                                        <div class="h-4 bg-yellow-500"
+                                                            style="width: {{ $nonBioPercent }}%"
+                                                            title="Non-biodegradable: {{ number_format($nonBiodegradable, 1) }}kg">
+                                                        </div>
+                                                    @endif
+                                                    @if ($hazardPercent > 0)
+                                                        <div class="h-4 bg-red-500"
+                                                            style="width: {{ $hazardPercent }}%"
+                                                            title="Hazardous: {{ number_format($hazardous, 1) }}kg">
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                            <!-- Waste breakdown text -->
+                                            <div class="space-y-1">
+                                                <div class="flex items-center justify-between text-xs">
+                                                    <div class="flex items-center">
+                                                        <div class="w-2 h-2 mr-1 bg-green-500 rounded-full"></div>
+                                                        <span>Bio:</span>
+                                                    </div>
+                                                    <span class="font-medium">{{ number_format($biodegradable, 1) }}kg
+                                                        ({{ number_format($bioPercent, 1) }}%)</span>
+                                                </div>
+                                                <div class="flex items-center justify-between text-xs">
+                                                    <div class="flex items-center">
+                                                        <div class="w-2 h-2 mr-1 bg-yellow-500 rounded-full"></div>
+                                                        <span>Non-bio:</span>
+                                                    </div>
+                                                    <span
+                                                        class="font-medium">{{ number_format($nonBiodegradable, 1) }}kg
+                                                        ({{ number_format($nonBioPercent, 1) }}%)</span>
+                                                </div>
+                                                <div class="flex items-center justify-between text-xs">
+                                                    <div class="flex items-center">
+                                                        <div class="w-2 h-2 mr-1 bg-red-500 rounded-full"></div>
+                                                        <span>Hazardous:</span>
+                                                    </div>
+                                                    <span class="font-medium">{{ number_format($hazardous, 1) }}kg
+                                                        ({{ number_format($hazardPercent, 1) }}%)</span>
+                                                </div>
+                                            </div>
+                                        </td>
                                         <td class="px-6 py-4">{{ number_format($mrfWaste->capacity, 2) }}</td>
                                         <td class="px-6 py-4">
                                             @php
@@ -550,15 +617,43 @@
 
                     <!-- Add explanation -->
                     <div class="p-4 mt-4 border border-blue-200 rounded-lg bg-blue-50">
-                        <h4 class="mb-2 text-sm font-medium text-blue-800">Understanding MRF Utilization</h4>
-                        <ul class="space-y-1 text-xs text-blue-700">
-                            <li>• <strong>Total Waste:</strong> Total amount processed during selected period</li>
-                            <li>• <strong>Daily Capacity:</strong> Maximum waste the facility can process per day</li>
-                            <li>• <strong>Avg Daily Usage:</strong> Average waste processed per day during the period
-                            </li>
-                            <li>• <strong>Avg Utilization:</strong> (Avg Daily Usage ÷ Daily Capacity) × 100</li>
-                        </ul>
-                        <div class="flex items-center mt-2 space-x-4 text-xs">
+                        <h4 class="mb-2 text-sm font-medium text-blue-800">Understanding MRF Data</h4>
+                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div>
+                                <h5 class="mb-1 text-xs font-medium text-blue-800">Metrics Explained:</h5>
+                                <ul class="space-y-1 text-xs text-blue-700">
+                                    <li>• <strong>Total Waste:</strong> Total amount processed during selected period
+                                    </li>
+                                    <li>• <strong>Daily Capacity:</strong> Maximum waste the facility can process per
+                                        day</li>
+                                    <li>• <strong>Avg Daily Usage:</strong> Average waste processed per day during the
+                                        period</li>
+                                    <li>• <strong>Avg Utilization:</strong> (Avg Daily Usage ÷ Daily Capacity) × 100
+                                    </li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h5 class="mb-1 text-xs font-medium text-blue-800">Waste Categories:</h5>
+                                <div class="space-y-1">
+                                    <div class="flex items-center text-xs text-blue-700">
+                                        <div class="w-3 h-3 mr-2 bg-green-500 rounded"></div>
+                                        <span><strong>Biodegradable:</strong> Organic waste that decomposes
+                                            naturally</span>
+                                    </div>
+                                    <div class="flex items-center text-xs text-blue-700">
+                                        <div class="w-3 h-3 mr-2 bg-yellow-500 rounded"></div>
+                                        <span><strong>Non-biodegradable:</strong> Recyclable materials (plastic, metal,
+                                            glass)</span>
+                                    </div>
+                                    <div class="flex items-center text-xs text-blue-700">
+                                        <div class="w-3 h-3 mr-2 bg-red-500 rounded"></div>
+                                        <span><strong>Hazardous:</strong> Materials requiring special handling</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center mt-3 space-x-4 text-xs">
+                            <span class="font-medium text-blue-800">Utilization Status:</span>
                             <span class="flex items-center">
                                 <div class="w-3 h-3 mr-1 bg-green-600 rounded"></div>Good (≤60%)
                             </span>

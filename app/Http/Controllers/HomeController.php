@@ -8,6 +8,7 @@ use App\Models\Document;
 use App\Models\Official;
 use App\Models\WasteCollectionRecord;
 use App\Models\GarbageCollectionSchedule;
+use App\Models\MaterialRecyclingFacility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -108,7 +109,10 @@ class HomeController extends Controller
                 'material_recycling_facilities.mrf_id',
                 'material_recycling_facilities.name',
                 'material_recycling_facilities.capacity',
-                DB::raw('SUM(total_volume) as total_volume')
+                DB::raw('SUM(total_volume) as total_volume'),
+                DB::raw('SUM(biodegradable_volume) as biodegradable'),
+                DB::raw('SUM(non_biodegradable_volume) as non_biodegradable'),
+                DB::raw('SUM(hazardous_volume) as hazardous')
             )
             ->orderBy('total_volume', 'desc')
             ->get();

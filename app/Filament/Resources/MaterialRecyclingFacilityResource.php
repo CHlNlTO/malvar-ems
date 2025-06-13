@@ -33,6 +33,7 @@ class MaterialRecyclingFacilityResource extends Resource
                     ->required()
                     ->maxLength(100),
                 Forms\Components\TextInput::make('location')
+                    ->label('Dumpster')
                     ->required()
                     ->maxLength(255),
                 Forms\Components\Select::make('barangay_id')
@@ -74,6 +75,7 @@ class MaterialRecyclingFacilityResource extends Resource
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('location')
+                    ->label('Dumpster')
                     ->searchable()
                     ->limit(30),
                 Tables\Columns\TextColumn::make('capacity')
